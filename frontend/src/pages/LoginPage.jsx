@@ -24,9 +24,7 @@ const LoginPage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     if (serverError) setServerError('');
   };
 
@@ -52,24 +50,16 @@ const LoginPage = () => {
     setServerError('');
     
     try {
-      console.log('Attempting login with:', { email: formData.email });
-      
       const response = await authService.login({
         email: formData.email,
         password: formData.password,
         rememberMe: formData.rememberMe,
       });
       
-      console.log('FULL RESPONSE:', JSON.stringify(response, null, 2));
-      console.log('Login response:', response);
-      
-      if (response && response.success) {
-        // Store user data
-        const userData = response.data;
+      if (response.success && response.data) {
         localStorage.setItem('temp_auth', 'true');
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify(response.data));
         
-        // If "Remember Me" is checked, set expiry
         if (formData.rememberMe) {
           localStorage.setItem('rememberMe', 'true');
           localStorage.setItem('loginExpiry', Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -78,38 +68,29 @@ const LoginPage = () => {
           localStorage.removeItem('loginExpiry');
         }
         
-        // Redirect based on user role
-        const userRole = userData?.role || 'user';
-        console.log('User role:', userRole);
-        console.log('Redirecting to:', userRole === 'admin' ? '/admin' : '/account');
+        const userRole = response.data?.role || 'user';
         
-        // Small delay to ensure storage is set
-        setTimeout(() => {
-          if (userRole === 'admin') {
-            window.location.href = '/admin';
-          } else {
-            window.location.href = '/account';
-          }
-        }, 100);
+        if (userRole === 'admin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/account';
+        }
       } else {
         setServerError(response.message || 'Login failed');
-        setLoading(false);
       }
     } catch (error) {
       console.error('Login error:', error);
       setServerError(error.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
       setLoading(false);
     }
   };
-
-console.log('API URL being used:', import.meta.env.VITE_API_URL);
-console.log('Full login URL:', `${import.meta.env.VITE_API_URL}/auth/login`);
 
   return (
     <>
       <Helmet>
         <title>Sign In | Mall242</title>
-        <meta name="description" content="Sign in to your Mall242 account to track orders, manage your VIP rewards, and enjoy faster checkout." />
+        <meta name="description" content="Sign in to your Mall242 account." />
       </Helmet>
 
       <div className="bg-gray-50 min-h-screen py-12">
@@ -119,10 +100,7 @@ console.log('Full login URL:', `${import.meta.env.VITE_API_URL}/auth/login`);
             <div className="md:w-1/2 bg-gradient-to-br from-[#00A9B0] to-[#008c92] text-white p-8 flex flex-col justify-center items-center text-center">
               <img src="/mall242logo.jpeg" alt="Mall242" className="h-20 w-auto mb-4" />
               <div className="mb-4">
-                <span className="text-3xl font-bold tracking-wider">
-                  <span className="text-white">MALL</span>
-                  <span className="text-white">242</span>
-                </span>
+                <span className="text-3xl font-bold tracking-wider">MALL242</span>
                 <p className="text-sm opacity-90">Bahamas</p>
               </div>
               <h2 className="text-2xl font-bold mb-2 mt-4">Welcome Back!</h2>
@@ -239,26 +217,16 @@ console.log('Full login URL:', `${import.meta.env.VITE_API_URL}/auth/login`);
               </form>
 
               <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">New to Mall242?</span>
-                </div>
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+                <div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-gray-500">New to Mall242?</span></div>
               </div>
 
-              <Link
-                to="/register"
-                className="w-full block text-center border border-gray-300 bg-white text-gray-700 py-2 rounded-full font-semibold hover:bg-gray-50 transition-colors"
-              >
+              <Link to="/register" className="w-full block text-center border border-gray-300 bg-white text-gray-700 py-2 rounded-full font-semibold hover:bg-gray-50 transition-colors">
                 Create your Mall242 account
               </Link>
 
               <div className="mt-4 text-center">
-                <button
-                  onClick={() => navigate('/checkout')}
-                  className="text-sm text-gray-500 hover:text-[#00A9B0] transition-colors"
-                >
+                <button onClick={() => navigate('/checkout')} className="text-sm text-gray-500 hover:text-[#00A9B0] transition-colors">
                   Checkout as guest →
                 </button>
               </div>

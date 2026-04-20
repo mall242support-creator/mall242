@@ -1,20 +1,13 @@
 import axios from 'axios';
 
-// Create axios instance with base URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-console.log('API_URL from env:', import.meta.env.VITE_API_URL);
-console.log('Final API_URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true, // Important for HTTP-only cookies
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
-// Request interceptor to add token (if needed for mobile apps)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -23,23 +16,22 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle errors - NO REFRESH LOOP
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // If 401 Unauthorized, clear storage and redirect to login
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('temp_auth');
-      localStorage.removeItem('user');
-      // Only redirect if not already on login page
-      if (!window.location.pathname.includes('/login')) {
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        await api.post('/auth/refresh');
+        return api(originalRequest);
+      } catch (refreshError) {
         window.location.href = '/login';
+        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
@@ -47,691 +39,167 @@ api.interceptors.response.use(
 );
 
 // ============ AUTH SERVICES ============
-
 export const authService = {
-  register: async (userData) => {
-    const response = await api.post('/auth/register', userData);
-    return response.data;
-  },
-  
-  login: async (credentials) => {
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
-  },
-  
-  logout: async () => {
-    const response = await api.post('/auth/logout');
-    return response.data;
-  },
-  
-  getMe: async () => {
-    const response = await api.get('/auth/me');
-    return response.data;
-  },
-  
-  updateProfile: async (profileData) => {
-    const response = await api.put('/auth/profile', profileData);
-    return response.data;
-  },
-  
-  changePassword: async (passwordData) => {
-    const response = await api.put('/auth/change-password', passwordData);
-    return response.data;
-  },
-  
-  forgotPassword: async (email) => {
-    const response = await api.post('/auth/forgot-password', { email });
-    return response.data;
-  },
-  
-  resetPassword: async (token, password) => {
-    const response = await api.put(`/auth/reset-password/${token}`, { password });
-    return response.data;
-  },
-};
-
-// ============ CONTACT SERVICES ============
-
-export const contactService = {
-  sendContactForm: async (formData) => {
-    const response = await api.post('/contact', formData);
-    return response.data;
-  },
-};
-
-// ============ WISHLIST SERVICES ============
-
-export const wishlistService = {
-  getWishlist: async () => {
-    const response = await api.get('/wishlist');
-    return response.data;
-  },
-  
-  addToWishlist: async (productId) => {
-    const response = await api.post('/wishlist/add', { productId });
-    return response.data;
-  },
-  
-  removeFromWishlist: async (productId) => {
-    const response = await api.delete(`/wishlist/remove/${productId}`);
-    return response.data;
-  },
-  
-  moveToCart: async (productId) => {
-    const response = await api.post(`/wishlist/move-to-cart/${productId}`);
-    return response.data;
-  },
-  
-  clearWishlist: async () => {
-    const response = await api.delete('/wishlist/clear');
-    return response.data;
-  },
+  register: (userData) => api.post('/auth/register', userData).then(res => res.data),
+  login: (credentials) => api.post('/auth/login', credentials).then(res => res.data),
+  logout: () => api.post('/auth/logout').then(res => res.data),
+  getMe: () => api.get('/auth/me').then(res => res.data),
+  updateProfile: (profileData) => api.put('/auth/profile', profileData).then(res => res.data),
+  changePassword: (passwordData) => api.put('/auth/change-password', passwordData).then(res => res.data),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }).then(res => res.data),
+  resetPassword: (token, password) => api.put(`/auth/reset-password/${token}`, { password }).then(res => res.data),
 };
 
 // ============ PRODUCT SERVICES ============
-
 export const productService = {
-  getProducts: async (filters = {}) => {
+  getProducts: (filters = {}) => {
     const params = new URLSearchParams();
-    Object.keys(filters).forEach(key => {
-      if (filters[key]) params.append(key, filters[key]);
-    });
-    const response = await api.get(`/products?${params.toString()}`);
-    return response.data;
+    Object.entries(filters).forEach(([key, value]) => { if (value) params.append(key, value); });
+    return api.get(`/products?${params.toString()}`).then(res => res.data);
   },
-  
-  getProduct: async (id) => {
-    const response = await api.get(`/products/${id}`);
-    return response.data;
-  },
-  
-  getProductsByCategory: async (slug, page = 1, limit = 20) => {
-    const response = await api.get(`/products/category/${slug}?page=${page}&limit=${limit}`);
-    return response.data;
-  },
-  
-  searchProducts: async (query, page = 1, limit = 20) => {
-    const response = await api.get(`/products/search?q=${query}&page=${page}&limit=${limit}`);
-    return response.data;
-  },
-  
-  getFeaturedProducts: async (limit = 10) => {
-    const response = await api.get(`/products/featured?limit=${limit}`);
-    return response.data;
-  },
-  
-  getDealsProducts: async (limit = 12) => {
-    const response = await api.get(`/products/deals?limit=${limit}`);
-    return response.data;
-  },
-  
-  getRelatedProducts: async (productId, limit = 6) => {
-    const response = await api.get(`/products/${productId}/related?limit=${limit}`);
-    return response.data;
-  },
-  
-  getReviews: async (productId, page = 1, limit = 10) => {
-    const response = await api.get(`/products/${productId}/reviews?page=${page}&limit=${limit}`);
-    return response.data;
-  },
-
-  addReview: async (productId, reviewData) => {
-    const response = await api.post(`/products/${productId}/reviews`, reviewData);
-    return response.data;
-  },
-
-  markReviewHelpful: async (reviewId) => {
-    const response = await api.put(`/products/reviews/${reviewId}/helpful`);
-    return response.data;
-  },
-
-  reportReview: async (reviewId, reason) => {
-    const response = await api.post(`/products/reviews/${reviewId}/report`, { reason });
-    return response.data;
-  },
+  getProduct: (id) => api.get(`/products/${id}`).then(res => res.data),
+  getFeaturedProducts: (limit = 10) => api.get(`/products/featured?limit=${limit}`).then(res => res.data),
+  getDealsProducts: (limit = 12) => api.get(`/products/deals?limit=${limit}`).then(res => res.data),
+  getRelatedProducts: (productId, limit = 6) => api.get(`/products/${productId}/related?limit=${limit}`).then(res => res.data),
+  searchProducts: (query, page = 1, limit = 20) => api.get(`/products/search?q=${query}&page=${page}&limit=${limit}`).then(res => res.data),
+  addReview: (productId, reviewData) => api.post(`/products/${productId}/reviews`, reviewData).then(res => res.data),
+  getReviews: (productId, page = 1, limit = 10) => api.get(`/products/${productId}/reviews?page=${page}&limit=${limit}`).then(res => res.data),
+  markReviewHelpful: (reviewId) => api.put(`/products/reviews/${reviewId}/helpful`).then(res => res.data),
 };
 
 // ============ CART SERVICES ============
-
 export const cartService = {
-  getCart: async (sessionId = null) => {
-    const params = sessionId ? `?sessionId=${sessionId}` : '';
-    const response = await api.get(`/cart${params}`);
-    return response.data;
-  },
-  
-  addToCart: async (productId, quantity = 1, variant = null, sessionId = null) => {
-    const response = await api.post('/cart/add', { productId, quantity, variant, sessionId });
-    return response.data;
-  },
-  
-  updateCartItem: async (productId, quantity, variant = null, sessionId = null) => {
-    const response = await api.put(`/cart/update/${productId}`, { quantity, variant, sessionId });
-    return response.data;
-  },
-  
-  removeFromCart: async (productId, variant = null, sessionId = null) => {
-    const response = await api.delete(`/cart/remove/${productId}`, { data: { variant, sessionId } });
-    return response.data;
-  },
-  
-  clearCart: async (sessionId = null) => {
-    const response = await api.delete('/cart/clear', { data: { sessionId } });
-    return response.data;
-  },
-  
-  saveForLater: async (productId, variant = null, sessionId = null) => {
-    const response = await api.post('/cart/save-for-later', { productId, variant, sessionId });
-    return response.data;
-  },
-  
-  moveToCart: async (productId, variant = null, sessionId = null) => {
-    const response = await api.post('/cart/move-to-cart', { productId, variant, sessionId });
-    return response.data;
-  },
-  
-  applyDiscount: async (discountCode, sessionId = null) => {
-    const response = await api.post('/cart/apply-discount', { discountCode, sessionId });
-    return response.data;
-  },
-  
-  mergeCart: async (sessionId) => {
-    const response = await api.post('/cart/merge', { sessionId });
-    return response.data;
-  },
+  getCart: (sessionId = null) => api.get(`/cart${sessionId ? `?sessionId=${sessionId}` : ''}`).then(res => res.data),
+  addToCart: (productId, quantity = 1, variant = null, sessionId = null) => api.post('/cart/add', { productId, quantity, variant, sessionId }).then(res => res.data),
+  updateCartItem: (productId, quantity, variant = null, sessionId = null) => api.put(`/cart/update/${productId}`, { quantity, variant, sessionId }).then(res => res.data),
+  removeFromCart: (productId, variant = null, sessionId = null) => api.delete(`/cart/remove/${productId}`, { data: { variant, sessionId } }).then(res => res.data),
+  clearCart: (sessionId = null) => api.delete('/cart/clear', { data: { sessionId } }).then(res => res.data),
+  saveForLater: (productId, variant = null, sessionId = null) => api.post('/cart/save-for-later', { productId, variant, sessionId }).then(res => res.data),
+  moveToCart: (productId, variant = null, sessionId = null) => api.post('/cart/move-to-cart', { productId, variant, sessionId }).then(res => res.data),
+  applyDiscount: (discountCode, sessionId = null) => api.post('/cart/apply-discount', { discountCode, sessionId }).then(res => res.data),
+  mergeCart: (sessionId) => api.post('/cart/merge', { sessionId }).then(res => res.data),
 };
 
 // ============ ORDER SERVICES ============
-
 export const orderService = {
-  createOrder: async (orderData) => {
-    const response = await api.post('/orders', orderData);
-    return response.data;
-  },
-  
-  getUserOrders: async (page = 1, limit = 10, status = null) => {
+  createOrder: (orderData) => api.post('/orders', orderData).then(res => res.data),
+  getUserOrders: (page = 1, limit = 10, status = null) => {
     const params = new URLSearchParams({ page, limit });
     if (status) params.append('status', status);
-    const response = await api.get(`/orders?${params.toString()}`);
-    return response.data;
+    return api.get(`/orders?${params.toString()}`).then(res => res.data);
   },
-  
-  getOrderById: async (orderId) => {
-    const response = await api.get(`/orders/${orderId}`);
-    return response.data;
-  },
-  
-  cancelOrder: async (orderId, reason = null) => {
-    const response = await api.put(`/orders/${orderId}/cancel`, { reason });
-    return response.data;
-  },
-  
-  requestReturn: async (orderId, reason, items = null) => {
-    const response = await api.post(`/orders/${orderId}/return`, { reason, items });
-    return response.data;
-  },
-  
-  trackOrder: async (orderId) => {
-    const response = await api.get(`/orders/track/${orderId}`);
-    return response.data;
-  },
+  getOrderById: (orderId) => api.get(`/orders/${orderId}`).then(res => res.data),
+  cancelOrder: (orderId, reason = null) => api.put(`/orders/${orderId}/cancel`, { reason }).then(res => res.data),
+  requestReturn: (orderId, reason, items = null) => api.post(`/orders/${orderId}/return`, { reason, items }).then(res => res.data),
+  trackOrder: (orderId) => api.get(`/orders/track/${orderId}`).then(res => res.data),
 };
 
 // ============ REFERRAL SERVICES ============
-
 export const referralService = {
-  getStats: async () => {
-    const response = await api.get('/referrals/stats');
-    return response.data;
-  },
-  
-  getHistory: async (page = 1, limit = 20) => {
-    const response = await api.get(`/referrals/history?page=${page}&limit=${limit}`);
-    return response.data;
-  },
-  
-  getRewards: async () => {
-    const response = await api.get('/referrals/rewards');
-    return response.data;
-  },
-  
-  claimReward: async (rewardId) => {
-    const response = await api.post(`/referrals/claim-reward/${rewardId}`);
-    return response.data;
-  },
-  
-  getShareLinks: async () => {
-    const response = await api.get('/referrals/share-links');
-    return response.data;
-  },
-  
-  getLeaderboard: async (period = 'month', limit = 10) => {
-    const response = await api.get(`/referrals/leaderboard?period=${period}&limit=${limit}`);
-    return response.data;
-  },
-  
-  trackClick: async (referralCode, source = 'direct') => {
-    const response = await api.post('/referrals/track-click', { referralCode, source });
-    return response.data;
-  },
-  
-  getRewardTiers: async () => {
-    const response = await api.get('/referrals/tiers');
-    return response.data;
-  },
-  
-  checkEarlyAccess: async () => {
-    const response = await api.get('/referrals/early-access');
-    return response.data;
-  },
+  getStats: () => api.get('/referrals/stats').then(res => res.data),
+  getRewards: () => api.get('/referrals/rewards').then(res => res.data),
+  getShareLinks: () => api.get('/referrals/share-links').then(res => res.data),
+  getLeaderboard: (period = 'month', limit = 10) => api.get(`/referrals/leaderboard?period=${period}&limit=${limit}`).then(res => res.data),
+  trackClick: (referralCode, source = 'direct') => api.post('/referrals/track-click', { referralCode, source }).then(res => res.data),
 };
 
 // ============ DREAM MALL SERVICES ============
-
 export const dreamMallService = {
-  savePreferences: async (preferences) => {
-    const response = await api.post('/dream-mall/save', preferences);
-    return response.data;
-  },
-  
-  getMyPreferences: async () => {
-    const response = await api.get('/dream-mall/my-preferences');
-    return response.data;
-  },
-  
-  updatePreferences: async (preferences) => {
-    const response = await api.put('/dream-mall/update', preferences);
-    return response.data;
-  },
-  
-  getRecommendations: async () => {
-    const response = await api.get('/dream-mall/recommendations');
-    return response.data;
-  },
-  
-  getQuizCategories: async () => {
-    const response = await api.get('/dream-mall/categories');
-    return response.data;
-  },
-  
-  getQuizBrands: async () => {
-    const response = await api.get('/dream-mall/brands');
-    return response.data;
-  },
-
-  deletePreferences: async () => {
-    const response = await api.delete('/dream-mall/preferences');
-    return response.data;
-  },
-  
-  getDealTypes: async () => {
-    const response = await api.get('/dream-mall/deal-types');
-    return response.data;
-  },
+  savePreferences: (preferences) => api.post('/dream-mall/save', preferences).then(res => res.data),
+  getMyPreferences: () => api.get('/dream-mall/my-preferences').then(res => res.data),
+  updatePreferences: (preferences) => api.put('/dream-mall/update', preferences).then(res => res.data),
+  getRecommendations: () => api.get('/dream-mall/recommendations').then(res => res.data),
+  deletePreferences: () => api.delete('/dream-mall/preferences').then(res => res.data),
 };
 
 // ============ MYSTERY DROP SERVICES ============
-
 export const mysteryDropService = {
-  getAll: async (isVIP = false) => {
-    const response = await api.get(`/mystery-drops?isVIP=${isVIP}`);
-    return response.data;
-  },
-  
-  getOne: async (id, isVIP = false) => {
-    const response = await api.get(`/mystery-drops/${id}?isVIP=${isVIP}`);
-    return response.data;
-  },
-  
-  signup: async (email, mysteryDropId) => {
-    const response = await api.post('/mystery-drops/signup', { email, mysteryDropId });
-    return response.data;
-  },
+  getAll: (isVIP = false) => api.get(`/mystery-drops?isVIP=${isVIP}`).then(res => res.data),
+  getOne: (id, isVIP = false) => api.get(`/mystery-drops/${id}?isVIP=${isVIP}`).then(res => res.data),
+  signup: (email, mysteryDropId) => api.post('/mystery-drops/signup', { email, mysteryDropId }).then(res => res.data),
 };
 
-// ============ VENDOR SERVICES ============
+// ============ WISHLIST SERVICES ============
+export const wishlistService = {
+  getWishlist: () => api.get('/wishlist').then(res => res.data),
+  addToWishlist: (productId) => api.post('/wishlist/add', { productId }).then(res => res.data),
+  removeFromWishlist: (productId) => api.delete(`/wishlist/remove/${productId}`).then(res => res.data),
+  moveToCart: (productId) => api.post(`/wishlist/move-to-cart/${productId}`).then(res => res.data),
+  clearWishlist: () => api.delete('/wishlist/clear').then(res => res.data),
+};
 
-export const vendorService = {
-  getStats: async () => {
-    const response = await api.get('/vendor/dashboard/stats');
-    return response.data;
-  },
-  
-  getProducts: async (page = 1, limit = 20, status = null) => {
-    const params = new URLSearchParams({ page, limit });
-    if (status) params.append('status', status);
-    const response = await api.get(`/vendor/products?${params.toString()}`);
-    return response.data;
-  },
-  
-  createProduct: async (productData) => {
-    const response = await api.post('/vendor/products', productData);
-    return response.data;
-  },
-  
-  updateProduct: async (productId, productData) => {
-    const response = await api.put(`/vendor/products/${productId}`, productData);
-    return response.data;
-  },
-  
-  deleteProduct: async (productId) => {
-    const response = await api.delete(`/vendor/products/${productId}`);
-    return response.data;
-  },
-  
-  updateInventory: async (updates) => {
-    const response = await api.put('/vendor/inventory', { updates });
-    return response.data;
-  },
-  
-  getOrders: async (page = 1, limit = 20, status = null) => {
-    const params = new URLSearchParams({ page, limit });
-    if (status) params.append('status', status);
-    const response = await api.get(`/vendor/orders?${params.toString()}`);
-    return response.data;
-  },
-  
-  updateOrderItem: async (orderId, itemId, status, trackingNumber = null, trackingCarrier = null) => {
-    const response = await api.put(`/vendor/orders/${orderId}/items/${itemId}`, {
-      status,
-      trackingNumber,
-      trackingCarrier,
-    });
-    return response.data;
-  },
-  
-  getSalesAnalytics: async (period = 'month') => {
-    const response = await api.get(`/vendor/analytics/sales?period=${period}`);
-    return response.data;
-  },
+// ============ CATEGORY SERVICES ============
+export const categoryService = {
+  getAll: () => api.get('/categories').then(res => res.data),
+  getOne: (slug) => api.get(`/categories/${slug}`).then(res => res.data),
 };
 
 // ============ HERO SERVICES ============
-
 export const heroService = {
-  getHeroSlides: async () => {
-    const response = await api.get('/hero');
-    return response.data;
-  },
+  getHeroSlides: () => api.get('/hero').then(res => res.data),
+};
+
+// ============ CONTACT SERVICES ============
+export const contactService = {
+  sendContactForm: (formData) => api.post('/contact', formData).then(res => res.data),
 };
 
 // ============ PROMO SERVICES ============
-
 export const promoService = {
-  getActivePromo: async () => {
-    const response = await api.get('/promo/active');
-    return response.data;
-  },
+  getActivePromo: () => api.get('/promo/active').then(res => res.data),
 };
 
 // ============ ADMIN SERVICES ============
-
 export const adminService = {
-  getStats: async () => {
-    const response = await api.get('/admin/dashboard/stats');
-    return response.data;
-  },
-
-  deleteUser: async (userId) => {
-    const response = await api.delete(`/admin/users/${userId}`);
-    return response.data;
-  },
-
-  getAllPromos: async () => {
-    const response = await api.get('/admin/promos');
-    return response.data;
-  },
-
-  createPromo: async (data) => {
-    const response = await api.post('/admin/promos', data);
-    return response.data;
-  },
-
-  updatePromo: async (id, data) => {
-    const response = await api.put(`/admin/promos/${id}`, data);
-    return response.data;
-  },
-
-  deletePromo: async (id) => {
-    const response = await api.delete(`/admin/promos/${id}`);
-    return response.data;
-  },
-
-  getAllMysteryDrops: async () => {
-    const response = await api.get('/admin/mystery-drops');
-    return response.data;
-  },
-
-  createMysteryDrop: async (data) => {
-    const response = await api.post('/admin/mystery-drops', data);
-    return response.data;
-  },
-
-  updateMysteryDrop: async (id, data) => {
-    const response = await api.put(`/admin/mystery-drops/${id}`, data);
-    return response.data;
-  },
-
-  deleteMysteryDrop: async (id) => {
-    const response = await api.delete(`/admin/mystery-drops/${id}`);
-    return response.data;
-  },
-
-  revealMysteryDrop: async (id) => {
-    const response = await api.post(`/admin/mystery-drops/${id}/reveal`);
-    return response.data;
-  },
-
-  getMysteryDropSignups: async (id, page = 1, limit = 50) => {
-    const response = await api.get(`/admin/mystery-drops/${id}/signups?page=${page}&limit=${limit}`);
-    return response.data;
-  },
-
-  getContactMessages: async (page = 1, limit = 20, status = null) => {
-    const params = new URLSearchParams({ page, limit });
-    if (status && status !== 'all') params.append('status', status);
-    const response = await api.get(`/admin/contact?${params.toString()}`);
-    return response.data;
-  },
-
-  getContactMessage: async (id) => {
-    const response = await api.get(`/admin/contact/${id}`);
-    return response.data;
-  },
-
-  replyToContact: async (id, reply, closeTicket = false) => {
-    const response = await api.post(`/admin/contact/${id}/reply`, { reply, closeTicket });
-    return response.data;
-  },
-
-  deleteContactMessage: async (id) => {
-    const response = await api.delete(`/admin/contact/${id}`);
-    return response.data;
-  },
-
-  getAllHeroSlides: async () => {
-    const response = await api.get('/admin/hero');
-    return response.data;
-  },
-
-  getHeroSlideById: async (id) => {
-    const response = await api.get(`/admin/hero/${id}`);
-    return response.data;
-  },
-
-  createHeroSlide: async (slideData) => {
-    const response = await api.post('/admin/hero', slideData);
-    return response.data;
-  },
-
-  updateHeroSlide: async (id, slideData) => {
-    const response = await api.put(`/admin/hero/${id}`, slideData);
-    return response.data;
-  },
-
-  deleteHeroSlide: async (id) => {
-    const response = await api.delete(`/admin/hero/${id}`);
-    return response.data;
-  },
-
-  reorderHeroSlides: async (slides) => {
-    const response = await api.put('/admin/hero/reorder', { slides });
-    return response.data;
-  },
-  
-  getUsers: async (page = 1, limit = 20, role = null, search = null) => {
+  getStats: () => api.get('/admin/dashboard/stats').then(res => res.data),
+  getUsers: (page = 1, limit = 20, role = null, search = null) => {
     const params = new URLSearchParams({ page, limit });
     if (role) params.append('role', role);
     if (search) params.append('search', search);
-    const response = await api.get(`/admin/users?${params.toString()}`);
-    return response.data;
+    return api.get(`/admin/users?${params.toString()}`).then(res => res.data);
   },
-  
-  getUser: async (userId) => {
-    const response = await api.get(`/admin/users/${userId}`);
-    return response.data;
-  },
-  
-  updateUserRole: async (userId, role) => {
-    const response = await api.put(`/admin/users/${userId}/role`, { role });
-    return response.data;
-  },
-  
-  approveVendor: async (userId) => {
-    const response = await api.put(`/admin/users/${userId}/approve-vendor`);
-    return response.data;
-  },
-  
-  deactivateUser: async (userId) => {
-    const response = await api.put(`/admin/users/${userId}/deactivate`);
-    return response.data;
-  },
-  
-  activateUser: async (userId) => {
-    const response = await api.put(`/admin/users/${userId}/activate`);
-    return response.data;
-  },
-  
-  getAllProducts: async (page = 1, limit = 20, status = null, vendor = null) => {
+  updateUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }).then(res => res.data),
+  deactivateUser: (userId) => api.put(`/admin/users/${userId}/deactivate`).then(res => res.data),
+  activateUser: (userId) => api.put(`/admin/users/${userId}/activate`).then(res => res.data),
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`).then(res => res.data),
+  getAllProducts: (page = 1, limit = 20, status = null) => {
     const params = new URLSearchParams({ page, limit });
     if (status) params.append('status', status);
-    if (vendor) params.append('vendor', vendor);
-    const response = await api.get(`/admin/products?${params.toString()}`);
-    return response.data;
+    return api.get(`/admin/products?${params.toString()}`).then(res => res.data);
   },
-  
-  createProduct: async (productData) => {
-    const response = await api.post('/admin/products', productData);
-    return response.data;
-  },
-  
-  updateProduct: async (id, productData) => {
-    const response = await api.put(`/admin/products/${id}`, productData);
-    return response.data;
-  },
-  
-  deleteProduct: async (id) => {
-    const response = await api.delete(`/admin/products/${id}`);
-    return response.data;
-  },
-  
-  approveProduct: async (id) => {
-    const response = await api.put(`/admin/products/${id}/approve`);
-    return response.data;
-  },
-  
-  rejectProduct: async (id, reason) => {
-    const response = await api.put(`/admin/products/${id}/reject`, { reason });
-    return response.data;
-  },
-  
-  getAllOrders: async (page = 1, limit = 20, status = null, startDate = null, endDate = null) => {
+  getAllOrders: (page = 1, limit = 20, status = null) => {
     const params = new URLSearchParams({ page, limit });
     if (status) params.append('status', status);
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    const response = await api.get(`/admin/orders?${params.toString()}`);
-    return response.data;
+    return api.get(`/admin/orders?${params.toString()}`).then(res => res.data);
   },
-  
-  updateOrderStatus: async (orderId, status, note = '') => {
-    const response = await api.put(`/admin/orders/${orderId}/status`, { status, note });
-    return response.data;
+  updateOrderStatus: (orderId, status, note = '') => api.put(`/admin/orders/${orderId}/status`, { status, note }).then(res => res.data),
+  sendBroadcastEmail: (subject, message, userType) => api.post('/admin/broadcast/email', { subject, message, userType }).then(res => res.data),
+  getSettings: () => api.get('/admin/settings').then(res => res.data),
+  updateSettings: (settings) => api.put('/admin/settings', settings).then(res => res.data),
+  getAllHeroSlides: () => api.get('/admin/hero').then(res => res.data),
+  createHeroSlide: (slideData) => api.post('/admin/hero', slideData).then(res => res.data),
+  updateHeroSlide: (id, slideData) => api.put(`/admin/hero/${id}`, slideData).then(res => res.data),
+  deleteHeroSlide: (id) => api.delete(`/admin/hero/${id}`).then(res => res.data),
+  getAllCategories: () => api.get('/admin/categories').then(res => res.data),
+  createCategory: (categoryData) => api.post('/admin/categories', categoryData).then(res => res.data),
+  updateCategory: (id, categoryData) => api.put(`/admin/categories/${id}`, categoryData).then(res => res.data),
+  deleteCategory: (id) => api.delete(`/admin/categories/${id}`).then(res => res.data),
+  getContactMessages: (page = 1, limit = 20, status = null) => {
+    const params = new URLSearchParams({ page, limit });
+    if (status) params.append('status', status);
+    return api.get(`/admin/contact?${params.toString()}`).then(res => res.data);
   },
-  
-  processRefund: async (orderId, amount, reason) => {
-    const response = await api.post(`/admin/orders/${orderId}/refund`, { amount, reason });
-    return response.data;
-  },
-  
-  getAllCategories: async () => {
-    const response = await api.get('/admin/categories');
-    return response.data;
-  },
-  
-  getCategoryById: async (id) => {
-    const response = await api.get(`/admin/categories/${id}`);
-    return response.data;
-  },
-  
-  createCategory: async (categoryData) => {
-    const response = await api.post('/admin/categories', categoryData);
-    return response.data;
-  },
-  
-  updateCategory: async (id, categoryData) => {
-    const response = await api.put(`/admin/categories/${id}`, categoryData);
-    return response.data;
-  },
-  
-  deleteCategory: async (id) => {
-    const response = await api.delete(`/admin/categories/${id}`);
-    return response.data;
-  },
-  
-  sendBroadcastEmail: async (subject, message, userType, templateId = null) => {
-    const response = await api.post('/admin/broadcast/email', {
-      subject,
-      message,
-      userType,
-      templateId,
-    });
-    return response.data;
-  },
-
-  getSettings: async () => {
-    const response = await api.get('/admin/settings');
-    return response.data;
-  },
-
-  updateSettings: async (settings) => {
-    const response = await api.put('/admin/settings', settings);
-    return response.data;
-  },
-  
-  getReferralAnalytics: async (period = 'month') => {
-    const response = await api.get(`/admin/referrals/analytics?period=${period}`);
-    return response.data;
-  },
-  
-  updateRewardTiers: async (tiers) => {
-    const response = await api.put('/admin/referrals/tiers', { tiers });
-    return response.data;
-  },
-};
-
-// ============ CATEGORY SERVICES (Public) ============
-
-export const categoryService = {
-  getAll: async () => {
-    const response = await api.get('/categories');
-    return response.data;
-  },
-  
-  getOne: async (slug) => {
-    const response = await api.get(`/categories/${slug}`);
-    return response.data;
-  },
+  replyToContact: (id, reply, closeTicket = false) => api.post(`/admin/contact/${id}/reply`, { reply, closeTicket }).then(res => res.data),
+  getAllMysteryDrops: () => api.get('/admin/mystery-drops').then(res => res.data),
+  createMysteryDrop: (data) => api.post('/admin/mystery-drops', data).then(res => res.data),
+  updateMysteryDrop: (id, data) => api.put(`/admin/mystery-drops/${id}`, data).then(res => res.data),
+  deleteMysteryDrop: (id) => api.delete(`/admin/mystery-drops/${id}`).then(res => res.data),
+  revealMysteryDrop: (id) => api.post(`/admin/mystery-drops/${id}/reveal`).then(res => res.data),
+  getAllPromos: () => api.get('/admin/promos').then(res => res.data),
+  createPromo: (data) => api.post('/admin/promos', data).then(res => res.data),
+  updatePromo: (id, data) => api.put(`/admin/promos/${id}`, data).then(res => res.data),
+  deletePromo: (id) => api.delete(`/admin/promos/${id}`).then(res => res.data),
+  getReferralAnalytics: (period = 'month') => api.get(`/admin/referrals/analytics?period=${period}`).then(res => res.data),
 };
 
 export default api;
