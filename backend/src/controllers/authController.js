@@ -6,6 +6,7 @@ const { asyncHandler, BadRequestError, UnauthorizedError, NotFoundError } = requ
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../config/brevo');
 const logger = require('../utils/logger');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -189,13 +190,26 @@ const login = asyncHandler(async (req, res) => {
   user.lastLogin = new Date();
   await user.save();
 
-  // Generate token and set cookie
-  const token = generateToken(user._id);
-  const cookieOptions = {};
+  // Generate token
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: '7d',
+  });
+
+  // Set cookie options
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax', // Important for Netlify
+    path: '/',
+  };
+  
   if (rememberMe) {
     cookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+  } else {
+    cookieOptions.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
   }
-  setTokenCookie(res, token, cookieOptions);
+
+  res.cookie('token', token, cookieOptions);
 
   // Log login
   logger.logAuth(email, 'login', true);
