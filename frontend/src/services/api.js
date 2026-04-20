@@ -25,13 +25,19 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors
+// Response interceptor to handle errors - NO REFRESH LOOP
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // If 401 Unauthorized, redirect to login
+    // If 401 Unauthorized, clear storage and redirect to login
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
+      localStorage.removeItem('temp_auth');
+      localStorage.removeItem('user');
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -81,7 +87,6 @@ export const authService = {
   },
 };
 
-
 // ============ CONTACT SERVICES ============
 
 export const contactService = {
@@ -90,7 +95,6 @@ export const contactService = {
     return response.data;
   },
 };
-
 
 // ============ WISHLIST SERVICES ============
 
@@ -120,7 +124,6 @@ export const wishlistService = {
     return response.data;
   },
 };
-
 
 // ============ PRODUCT SERVICES ============
 
@@ -164,26 +167,25 @@ export const productService = {
     return response.data;
   },
   
-  // Reviews
-getReviews: async (productId, page = 1, limit = 10) => {
-  const response = await api.get(`/products/${productId}/reviews?page=${page}&limit=${limit}`);
-  return response.data;
-},
+  getReviews: async (productId, page = 1, limit = 10) => {
+    const response = await api.get(`/products/${productId}/reviews?page=${page}&limit=${limit}`);
+    return response.data;
+  },
 
-addReview: async (productId, reviewData) => {
-  const response = await api.post(`/products/${productId}/reviews`, reviewData);
-  return response.data;
-},
+  addReview: async (productId, reviewData) => {
+    const response = await api.post(`/products/${productId}/reviews`, reviewData);
+    return response.data;
+  },
 
-markReviewHelpful: async (reviewId) => {
-  const response = await api.put(`/products/reviews/${reviewId}/helpful`);
-  return response.data;
-},
+  markReviewHelpful: async (reviewId) => {
+    const response = await api.put(`/products/reviews/${reviewId}/helpful`);
+    return response.data;
+  },
 
-reportReview: async (reviewId, reason) => {
-  const response = await api.post(`/products/reviews/${reviewId}/report`, { reason });
-  return response.data;
-},
+  reportReview: async (reviewId, reason) => {
+    const response = await api.post(`/products/reviews/${reviewId}/report`, { reason });
+    return response.data;
+  },
 };
 
 // ============ CART SERVICES ============
@@ -355,9 +357,9 @@ export const dreamMallService = {
   },
 
   deletePreferences: async () => {
-  const response = await api.delete('/dream-mall/preferences');
-  return response.data;
-},
+    const response = await api.delete('/dream-mall/preferences');
+    return response.data;
+  },
   
   getDealTypes: async () => {
     const response = await api.get('/dream-mall/deal-types');
@@ -462,126 +464,118 @@ export const promoService = {
 // ============ ADMIN SERVICES ============
 
 export const adminService = {
-  // Dashboard
   getStats: async () => {
     const response = await api.get('/admin/dashboard/stats');
     return response.data;
   },
 
-  // Add to adminService in api.js
-deleteUser: async (userId) => {
-  const response = await api.delete(`/admin/users/${userId}`);
-  return response.data;
-},
+  deleteUser: async (userId) => {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
+  },
 
-// Promo Management
-getAllPromos: async () => {
-  const response = await api.get('/admin/promos');
-  return response.data;
-},
+  getAllPromos: async () => {
+    const response = await api.get('/admin/promos');
+    return response.data;
+  },
 
-createPromo: async (data) => {
-  const response = await api.post('/admin/promos', data);
-  return response.data;
-},
+  createPromo: async (data) => {
+    const response = await api.post('/admin/promos', data);
+    return response.data;
+  },
 
-updatePromo: async (id, data) => {
-  const response = await api.put(`/admin/promos/${id}`, data);
-  return response.data;
-},
+  updatePromo: async (id, data) => {
+    const response = await api.put(`/admin/promos/${id}`, data);
+    return response.data;
+  },
 
-deletePromo: async (id) => {
-  const response = await api.delete(`/admin/promos/${id}`);
-  return response.data;
-},
+  deletePromo: async (id) => {
+    const response = await api.delete(`/admin/promos/${id}`);
+    return response.data;
+  },
 
-// Mystery Drop Management
-getAllMysteryDrops: async () => {
-  const response = await api.get('/admin/mystery-drops');
-  return response.data;
-},
+  getAllMysteryDrops: async () => {
+    const response = await api.get('/admin/mystery-drops');
+    return response.data;
+  },
 
-createMysteryDrop: async (data) => {
-  const response = await api.post('/admin/mystery-drops', data);
-  return response.data;
-},
+  createMysteryDrop: async (data) => {
+    const response = await api.post('/admin/mystery-drops', data);
+    return response.data;
+  },
 
-updateMysteryDrop: async (id, data) => {
-  const response = await api.put(`/admin/mystery-drops/${id}`, data);
-  return response.data;
-},
+  updateMysteryDrop: async (id, data) => {
+    const response = await api.put(`/admin/mystery-drops/${id}`, data);
+    return response.data;
+  },
 
-deleteMysteryDrop: async (id) => {
-  const response = await api.delete(`/admin/mystery-drops/${id}`);
-  return response.data;
-},
+  deleteMysteryDrop: async (id) => {
+    const response = await api.delete(`/admin/mystery-drops/${id}`);
+    return response.data;
+  },
 
-revealMysteryDrop: async (id) => {
-  const response = await api.post(`/admin/mystery-drops/${id}/reveal`);
-  return response.data;
-},
+  revealMysteryDrop: async (id) => {
+    const response = await api.post(`/admin/mystery-drops/${id}/reveal`);
+    return response.data;
+  },
 
-getMysteryDropSignups: async (id, page = 1, limit = 50) => {
-  const response = await api.get(`/admin/mystery-drops/${id}/signups?page=${page}&limit=${limit}`);
-  return response.data;
-},
+  getMysteryDropSignups: async (id, page = 1, limit = 50) => {
+    const response = await api.get(`/admin/mystery-drops/${id}/signups?page=${page}&limit=${limit}`);
+    return response.data;
+  },
 
+  getContactMessages: async (page = 1, limit = 20, status = null) => {
+    const params = new URLSearchParams({ page, limit });
+    if (status && status !== 'all') params.append('status', status);
+    const response = await api.get(`/admin/contact?${params.toString()}`);
+    return response.data;
+  },
 
-// Contact Management
-getContactMessages: async (page = 1, limit = 20, status = null) => {
-  const params = new URLSearchParams({ page, limit });
-  if (status && status !== 'all') params.append('status', status);
-  const response = await api.get(`/admin/contact?${params.toString()}`);
-  return response.data;
-},
+  getContactMessage: async (id) => {
+    const response = await api.get(`/admin/contact/${id}`);
+    return response.data;
+  },
 
-getContactMessage: async (id) => {
-  const response = await api.get(`/admin/contact/${id}`);
-  return response.data;
-},
+  replyToContact: async (id, reply, closeTicket = false) => {
+    const response = await api.post(`/admin/contact/${id}/reply`, { reply, closeTicket });
+    return response.data;
+  },
 
-replyToContact: async (id, reply, closeTicket = false) => {
-  const response = await api.post(`/admin/contact/${id}/reply`, { reply, closeTicket });
-  return response.data;
-},
+  deleteContactMessage: async (id) => {
+    const response = await api.delete(`/admin/contact/${id}`);
+    return response.data;
+  },
 
-deleteContactMessage: async (id) => {
-  const response = await api.delete(`/admin/contact/${id}`);
-  return response.data;
-},
+  getAllHeroSlides: async () => {
+    const response = await api.get('/admin/hero');
+    return response.data;
+  },
 
-  // Hero Banner Management
-getAllHeroSlides: async () => {
-  const response = await api.get('/admin/hero');
-  return response.data;
-},
+  getHeroSlideById: async (id) => {
+    const response = await api.get(`/admin/hero/${id}`);
+    return response.data;
+  },
 
-getHeroSlideById: async (id) => {
-  const response = await api.get(`/admin/hero/${id}`);
-  return response.data;
-},
+  createHeroSlide: async (slideData) => {
+    const response = await api.post('/admin/hero', slideData);
+    return response.data;
+  },
 
-createHeroSlide: async (slideData) => {
-  const response = await api.post('/admin/hero', slideData);
-  return response.data;
-},
+  updateHeroSlide: async (id, slideData) => {
+    const response = await api.put(`/admin/hero/${id}`, slideData);
+    return response.data;
+  },
 
-updateHeroSlide: async (id, slideData) => {
-  const response = await api.put(`/admin/hero/${id}`, slideData);
-  return response.data;
-},
+  deleteHeroSlide: async (id) => {
+    const response = await api.delete(`/admin/hero/${id}`);
+    return response.data;
+  },
 
-deleteHeroSlide: async (id) => {
-  const response = await api.delete(`/admin/hero/${id}`);
-  return response.data;
-},
-
-reorderHeroSlides: async (slides) => {
-  const response = await api.put('/admin/hero/reorder', { slides });
-  return response.data;
-},
+  reorderHeroSlides: async (slides) => {
+    const response = await api.put('/admin/hero/reorder', { slides });
+    return response.data;
+  },
   
-  // User Management
   getUsers: async (page = 1, limit = 20, role = null, search = null) => {
     const params = new URLSearchParams({ page, limit });
     if (role) params.append('role', role);
@@ -615,7 +609,6 @@ reorderHeroSlides: async (slides) => {
     return response.data;
   },
   
-  // Product Management
   getAllProducts: async (page = 1, limit = 20, status = null, vendor = null) => {
     const params = new URLSearchParams({ page, limit });
     if (status) params.append('status', status);
@@ -649,7 +642,6 @@ reorderHeroSlides: async (slides) => {
     return response.data;
   },
   
-  // Order Management
   getAllOrders: async (page = 1, limit = 20, status = null, startDate = null, endDate = null) => {
     const params = new URLSearchParams({ page, limit });
     if (status) params.append('status', status);
@@ -669,7 +661,6 @@ reorderHeroSlides: async (slides) => {
     return response.data;
   },
   
-  // Category Management
   getAllCategories: async () => {
     const response = await api.get('/admin/categories');
     return response.data;
@@ -695,7 +686,6 @@ reorderHeroSlides: async (slides) => {
     return response.data;
   },
   
-  // Broadcast
   sendBroadcastEmail: async (subject, message, userType, templateId = null) => {
     const response = await api.post('/admin/broadcast/email', {
       subject,
@@ -706,19 +696,16 @@ reorderHeroSlides: async (slides) => {
     return response.data;
   },
 
-  // Settings
-getSettings: async () => {
-  const response = await api.get('/admin/settings');
-  return response.data;
-},
+  getSettings: async () => {
+    const response = await api.get('/admin/settings');
+    return response.data;
+  },
 
-updateSettings: async (settings) => {
-  const response = await api.put('/admin/settings', settings);
-  return response.data;
-},
+  updateSettings: async (settings) => {
+    const response = await api.put('/admin/settings', settings);
+    return response.data;
+  },
   
-
-  // Referral Analytics
   getReferralAnalytics: async (period = 'month') => {
     const response = await api.get(`/admin/referrals/analytics?period=${period}`);
     return response.data;

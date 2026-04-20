@@ -59,35 +59,39 @@ const LoginPage = () => {
         password: formData.password,
         rememberMe: formData.rememberMe,
       });
+      
       console.log('FULL RESPONSE:', JSON.stringify(response, null, 2));
       console.log('Login response:', response);
       
-if (response && (response.success || response.token || response.user)) {
-  // Store user data
-  const userData = response.data || response.user || response;
-  localStorage.setItem('temp_auth', 'true');
-  localStorage.setItem('user', JSON.stringify(userData));
-  
-  // If "Remember Me" is checked, set expiry
-  if (formData.rememberMe) {
-    localStorage.setItem('rememberMe', 'true');
-    localStorage.setItem('loginExpiry', Date.now() + 30 * 24 * 60 * 60 * 1000);
-  } else {
-    localStorage.removeItem('rememberMe');
-    localStorage.removeItem('loginExpiry');
-  }
-  
-  // Redirect based on user role
-  const userRole = userData?.role || 'user';
-  console.log('User role:', userRole);
-  
-  // Use window.location for hard redirect to ensure page reload
-if (userRole === 'admin') {
-  navigate('/admin', { replace: true });
-} else {
-  navigate('/account', { replace: true });
-}
-} else {
+      if (response && response.success) {
+        // Store user data
+        const userData = response.data;
+        localStorage.setItem('temp_auth', 'true');
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // If "Remember Me" is checked, set expiry
+        if (formData.rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+          localStorage.setItem('loginExpiry', Date.now() + 30 * 24 * 60 * 60 * 1000);
+        } else {
+          localStorage.removeItem('rememberMe');
+          localStorage.removeItem('loginExpiry');
+        }
+        
+        // Redirect based on user role
+        const userRole = userData?.role || 'user';
+        console.log('User role:', userRole);
+        console.log('Redirecting to:', userRole === 'admin' ? '/admin' : '/account');
+        
+        // Small delay to ensure storage is set
+        setTimeout(() => {
+          if (userRole === 'admin') {
+            window.location.href = '/admin';
+          } else {
+            window.location.href = '/account';
+          }
+        }, 100);
+      } else {
         setServerError(response.message || 'Login failed');
         setLoading(false);
       }
