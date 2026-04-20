@@ -82,11 +82,11 @@ if (response && (response.success || response.token || response.user)) {
   console.log('User role:', userRole);
   
   // Use window.location for hard redirect to ensure page reload
-  if (userRole === 'admin') {
-    window.location.href = '/admin';
-  } else {
-    window.location.href = '/account';
-  }
+if (userRole === 'admin') {
+  navigate('/admin', { replace: true });
+} else {
+  navigate('/account', { replace: true });
+}
 } else {
         setServerError(response.message || 'Login failed');
         setLoading(false);
