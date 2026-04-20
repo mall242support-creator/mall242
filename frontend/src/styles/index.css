@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles - Mall242 Amazon Clone */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #ffffff;
+    color: #111827;
+    line-height: 1.5;
+  }
+
+  /* Custom scrollbar - Amazon style */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #00A9B0;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #008c92;
+  }
+}
+
+/* Custom component classes */
+@layer components {
+  .container-custom {
+    @apply max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply bg-[#00A9B0] text-white px-6 py-2 rounded-full font-semibold 
+           hover:bg-[#008c92] transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-[#00A9B0] focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-[#FFC72C] text-black px-6 py-2 rounded-full font-semibold 
+           hover:bg-[#e5b300] transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-[#FFC72C] focus:ring-offset-2;
+  }
+
+  .btn-outline {
+    @apply border-2 border-[#00A9B0] text-[#00A9B0] px-6 py-2 rounded-full font-semibold 
+           hover:bg-[#00A9B0] hover:text-white transition-all duration-200;
+  }
+
+  .input-primary {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg 
+           focus:outline-none focus:ring-2 focus:ring-[#00A9B0] focus:border-transparent
+           transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden;
+  }
+
+  .section-title {
+    @apply text-xl md:text-2xl font-bold text-gray-800 mb-4 flex items-center justify-between;
+  }
+}
+
+/* Custom animations */
+@layer utilities {
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeUp {
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-slideIn {
+    animation: slideIn 0.3s ease-out forwards;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}

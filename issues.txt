@@ -1,0 +1,39 @@
+
+when the user logs in and build dream mall, the dream mall should save unless the user wants to delete and build another dream mall
+
+on cart page remove items dont work
+is the tax for checkout controlled by admin?
+
+STRICTLY ONE FILE AT A TIME
+
+
+node -e "
+require('dotenv').config();
+const { sendEmail } = require('./src/config/brevo');
+sendEmail({
+  to: 'isaactetteh93@gmail.com',
+  subject: 'Test Email from Mall242',
+  htmlContent: '<h1>Test</h1><p>This is a test email</p>'
+}).then(console.log).catch(console.error);
+"
+
+https://github.com/mall242support-creator/mall242.git
+
+# Check if git is initialized
+git status
+
+# If not initialized, run:
+git init
+
+# Add all files
+git add .
+
+# Commit the files
+git commit -m "Initial commit - Mall242 full stack e-commerce platform"
+
+# Create repository on GitHub first (via website), then connect:
+git remote add origin https://github.com/mall242support-creator/mall242.git
+
+# Push to GitHub
+git branch -M main
+git push -u origin main
