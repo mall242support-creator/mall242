@@ -116,16 +116,16 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Rate limiting - Auth routes (higher limit for development)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per 15 minutes
-  skipSuccessfulRequests: true,
-  message: {
-    success: false,
-    message: 'Too many authentication attempts, please try again later.',
-  },
-});
-app.use('/api/auth', authLimiter);
+// const authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // 100 requests per 15 minutes
+//   skipSuccessfulRequests: true,
+//   message: {
+//     success: false,
+//     message: 'Too many authentication attempts, please try again later.',
+//   },
+// });
+// app.use('/api/auth', authLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
