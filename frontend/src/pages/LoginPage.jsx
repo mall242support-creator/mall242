@@ -102,6 +102,9 @@ const LoginPage = () => {
     }
   };
 
+console.log('API URL being used:', import.meta.env.VITE_API_URL);
+console.log('Full login URL:', `${import.meta.env.VITE_API_URL}/auth/login`);
+
   return (
     <>
       <Helmet>
