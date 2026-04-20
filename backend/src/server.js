@@ -40,18 +40,19 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+// Trust proxy (important for Render.com)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: false, // Disable for development, configure properly for production
 }));
 
-// CORS configuration
+// CORS configuration - FIXED FOR NETLIFY
 const corsOptions = {
   origin: function(origin, callback) {
     const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      process.env.FRONTEND_URL_PROD,
       'https://mall242.netlify.app',
       'http://localhost:5173',
       'http://localhost:3000',
@@ -63,7 +64,7 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.log('CORS blocked origin:', origin);
@@ -72,7 +73,7 @@ const corsOptions = {
   },
   credentials: true, // Allow cookies to be sent
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
   exposedHeaders: ['Set-Cookie'],
 };
 
@@ -98,34 +99,34 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined', { stream: logger.stream }));
 }
 
-// Rate limiting - General API
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // 200 requests per 15 minutes
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting for health check
-    return req.path === '/health';
-  },
-});
-app.use('/api', limiter);
+// Rate limiting - General API (TEMPORARILY DISABLED FOR TESTING)
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 200, // 200 requests per 15 minutes
+//   message: {
+//     success: false,
+//     message: 'Too many requests from this IP, please try again later.',
+//   },
+//   standardHeaders: true,
+//   legacyHeaders: false,
+//   skip: (req) => {
+//     // Skip rate limiting for health check
+//     return req.path === '/health';
+//   },
+// });
+// app.use('/api', limiter);
 
-// Rate limiting - Auth routes (higher limit for development)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per 15 minutes
-  skipSuccessfulRequests: true,
-  message: {
-    success: false,
-    message: 'Too many authentication attempts, please try again later.',
-  },
-});
-app.use('/api/auth', authLimiter);
+// Rate limiting - Auth routes (TEMPORARILY DISABLED FOR TESTING)
+// const authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // 100 requests per 15 minutes
+//   skipSuccessfulRequests: true,
+//   message: {
+//     success: false,
+//     message: 'Too many authentication attempts, please try again later.',
+//   },
+// });
+// app.use('/api/auth', authLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
