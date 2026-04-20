@@ -191,25 +191,22 @@ const login = asyncHandler(async (req, res) => {
   await user.save();
 
   // Generate token
+  const jwt = require('jsonwebtoken');
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: '7d',
   });
 
-  // Set cookie options
-  const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax', // Important for Netlify
-    path: '/',
-  };
+  // Set cookie options for cross-domain
+  const maxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
   
-  if (rememberMe) {
-    cookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
-  } else {
-    cookieOptions.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
-  }
-
-  res.cookie('token', token, cookieOptions);
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: true, // Required for HTTPS
+    sameSite: 'none', // Required for cross-domain (Netlify -> Render)
+    domain: '.onrender.com', // Allows cookie across Render subdomains
+    path: '/',
+    maxAge: maxAge
+  });
 
   // Log login
   logger.logAuth(email, 'login', true);

@@ -46,38 +46,17 @@ app.set('trust proxy', 1);
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false, // Disable for development, configure properly for production
+  contentSecurityPolicy: false,
 }));
 
-// CORS configuration - FIXED FOR NETLIFY
-const corsOptions = {
-  origin: function(origin, callback) {
-    const allowedOrigins = [
-      'https://mall242.netlify.app',
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:5174',
-    ].filter(Boolean);
-    
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // Allow cookies to be sent
+// CORS configuration - FIXED FOR NETLIFY AND COOKIES
+app.use(cors({
+  origin: 'https://mall242.netlify.app',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
-  exposedHeaders: ['Set-Cookie'],
-};
-
-app.use(cors(corsOptions));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie']
+}));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -99,10 +78,10 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined', { stream: logger.stream }));
 }
 
-// Rate limiting - General API (TEMPORARILY DISABLED FOR TESTING)
+// Rate limiting - DISABLED FOR TESTING
 // const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 200, // 200 requests per 15 minutes
+//   windowMs: 15 * 60 * 1000,
+//   max: 200,
 //   message: {
 //     success: false,
 //     message: 'Too many requests from this IP, please try again later.',
@@ -110,16 +89,15 @@ if (process.env.NODE_ENV === 'development') {
 //   standardHeaders: true,
 //   legacyHeaders: false,
 //   skip: (req) => {
-//     // Skip rate limiting for health check
 //     return req.path === '/health';
 //   },
 // });
 // app.use('/api', limiter);
 
-// Rate limiting - Auth routes (TEMPORARILY DISABLED FOR TESTING)
+// Rate limiting - DISABLED FOR TESTING
 // const authLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // 100 requests per 15 minutes
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
 //   skipSuccessfulRequests: true,
 //   message: {
 //     success: false,
@@ -194,7 +172,6 @@ app.use(errorHandler);
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   logger.error(`Unhandled Rejection: ${err.message}`, { stack: err.stack });
-  // Close server & exit process
   if (server) {
     server.close(() => process.exit(1));
   } else {
@@ -205,7 +182,6 @@ process.on('unhandledRejection', (err) => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   logger.error(`Uncaught Exception: ${err.message}`, { stack: err.stack });
-  // Close server & exit process
   if (server) {
     server.close(() => process.exit(1));
   } else {
