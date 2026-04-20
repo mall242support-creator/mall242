@@ -99,33 +99,33 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Rate limiting - General API
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 200, // 200 requests per 15 minutes
-//   message: {
-//     success: false,
-//     message: 'Too many requests from this IP, please try again later.',
-//   },
-//   standardHeaders: true,
-//   legacyHeaders: false,
-//   skip: (req) => {
-//     // Skip rate limiting for health check
-//     return req.path === '/health';
-//   },
-// });
-// app.use('/api', limiter);
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // 200 requests per 15 minutes
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for health check
+    return req.path === '/health';
+  },
+});
+app.use('/api', limiter);
 
 // Rate limiting - Auth routes (higher limit for development)
-// const authLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // 100 requests per 15 minutes
-//   skipSuccessfulRequests: true,
-//   message: {
-//     success: false,
-//     message: 'Too many authentication attempts, please try again later.',
-//   },
-// });
-// app.use('/api/auth', authLimiter);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per 15 minutes
+  skipSuccessfulRequests: true,
+  message: {
+    success: false,
+    message: 'Too many authentication attempts, please try again later.',
+  },
+});
+app.use('/api/auth', authLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
