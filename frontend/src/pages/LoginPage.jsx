@@ -59,7 +59,7 @@ const LoginPage = () => {
         password: formData.password,
         rememberMe: formData.rememberMe,
       });
-      
+      console.log('FULL RESPONSE:', JSON.stringify(response, null, 2));
       console.log('Login response:', response);
       
 if (response && (response.success || response.token || response.user)) {
