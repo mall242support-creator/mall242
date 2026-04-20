@@ -62,32 +62,32 @@ const LoginPage = () => {
       
       console.log('Login response:', response);
       
-      if (response.success && response.data) {
-        // Store user data
-        localStorage.setItem('temp_auth', 'true');
-        localStorage.setItem('user', JSON.stringify(response.data));
-        
-        // If "Remember Me" is checked, set expiry
-        if (formData.rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
-          localStorage.setItem('loginExpiry', Date.now() + 30 * 24 * 60 * 60 * 1000);
-        } else {
-          localStorage.removeItem('rememberMe');
-          localStorage.removeItem('loginExpiry');
-        }
-        
-        // Redirect based on user role
-        const userRole = response.data?.role || 'user';
-        console.log('User role:', userRole);
-        console.log('Redirecting to:', userRole === 'admin' ? '/admin' : '/account');
-        
-        // Use window.location for hard redirect to ensure page reload
-        if (userRole === 'admin') {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/account';
-        }
-      } else {
+if (response && (response.success || response.token || response.user)) {
+  // Store user data
+  const userData = response.data || response.user || response;
+  localStorage.setItem('temp_auth', 'true');
+  localStorage.setItem('user', JSON.stringify(userData));
+  
+  // If "Remember Me" is checked, set expiry
+  if (formData.rememberMe) {
+    localStorage.setItem('rememberMe', 'true');
+    localStorage.setItem('loginExpiry', Date.now() + 30 * 24 * 60 * 60 * 1000);
+  } else {
+    localStorage.removeItem('rememberMe');
+    localStorage.removeItem('loginExpiry');
+  }
+  
+  // Redirect based on user role
+  const userRole = userData?.role || 'user';
+  console.log('User role:', userRole);
+  
+  // Use window.location for hard redirect to ensure page reload
+  if (userRole === 'admin') {
+    window.location.href = '/admin';
+  } else {
+    window.location.href = '/account';
+  }
+} else {
         setServerError(response.message || 'Login failed');
         setLoading(false);
       }
