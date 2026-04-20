@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import ScrollToTop from './components/common/ScrollToTop';
-import FloatingWhatsApp from './components/common/FloatingWhatsApp';
+import FloatingWhatsapp from './components/common/FloatingWhatsapp';
 import CookieConsent from './components/common/CookieConsent';
 import PromoPopup from './components/common/PromoPopup';
 
@@ -77,7 +77,7 @@ function App() {
         {/* 404 Not Found */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      <FloatingWhatsApp />
+      <FloatingWhatsapp />
       <CookieConsent />
       <PromoPopup />
     </Suspense>
