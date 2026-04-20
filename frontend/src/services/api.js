@@ -26,20 +26,29 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle errors
+// Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     
+    // Skip refresh for login and register endpoints
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/login') || 
+                          originalRequest.url?.includes('/auth/register');
+    
     // Handle 401 Unauthorized - token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
       
       try {
         await api.post('/auth/refresh');
         return api(originalRequest);
       } catch (refreshError) {
-        window.location.href = '/login';
+        // Clear local storage and redirect
+        localStorage.removeItem('token');
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
