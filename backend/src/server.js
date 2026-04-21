@@ -94,21 +94,21 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  message: { success: false, message: 'Too many requests, please try again later.' },
-  skip: (req) => req.path === '/health',
-});
-app.use('/api', limiter);
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 200,
+//   message: { success: false, message: 'Too many requests, please try again later.' },
+//   skip: (req) => req.path === '/health',
+// });
+// app.use('/api', limiter);
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000,  // Increased from 100
-  skipSuccessfulRequests: true,
-  message: { success: false, message: 'Too many authentication attempts, please try again later.' },
-});
-app.use('/api/auth', authLimiter);
+// const authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 1000,  // Increased from 100
+//   skipSuccessfulRequests: true,
+//   message: { success: false, message: 'Too many authentication attempts, please try again later.' },
+// });
+// app.use('/api/auth', authLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
