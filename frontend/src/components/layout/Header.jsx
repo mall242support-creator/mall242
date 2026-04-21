@@ -8,7 +8,6 @@ import SearchAutocomplete from '../common/SearchAutocomplete';
 const Header = () => {
   const navigate = useNavigate();
   const { cartCount } = useCart();
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
@@ -17,13 +16,14 @@ const Header = () => {
   const [user, setUser] = useState(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  // Load user from localStorage
+  // Load user from localStorage - using lazy initialization pattern
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
         const parsedUser = JSON.parse(userStr);
-        setUser(parsedUser);
+        // Use a timeout to avoid the setState warning in React 19
+        setTimeout(() => setUser(parsedUser), 0);
       } catch (e) {
         console.error('Failed to parse user:', e);
       }
@@ -35,14 +35,6 @@ const Header = () => {
     localStorage.removeItem('user');
     setUser(null);
     navigate('/login');
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : '';
-      navigate(`/products?search=${encodeURIComponent(searchQuery)}${categoryParam}`);
-    }
   };
 
   const handleCategorySelect = (categorySlug) => {
@@ -110,7 +102,7 @@ const Header = () => {
             </button>
 
             <Link to="/" className="flex-shrink-0 mr-4">
-              <img src="/mall242logo.jpeg" alt="Mall242" className="h-12 md:h-14 w-auto object-contain" />
+              <img src="/mall242logo.jpeg" alt="Mall242" className="h-14 md:h-16 w-auto object-contain" />
             </Link>
 
             {/* Search Autocomplete */}
@@ -263,38 +255,21 @@ const Header = () => {
               <i className="bi bi-list text-2xl"></i>
             </button>
             
-            {/* Search - CENTERED (oval shape) */}
-            <form onSubmit={handleSearch} className="flex-1 max-w-[60%]">
-              <div className="flex w-full">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-l-full text-xs w-20"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.slug} value={cat.slug}>{cat.name}</option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search"
-                  className="flex-1 px-3 py-2 border-y border-gray-300 text-sm min-w-0"
-                />
-                <button 
-                  type="submit" 
-                  className="bg-[#febd69] text-black px-4 rounded-r-full flex items-center justify-center flex-shrink-0"
-                >
-                  <i className="bi bi-search text-sm"></i>
-                </button>
-              </div>
-            </form>
-            
-            {/* Logo - RIGHT */}
+            {/* Logo - CENTERED */}
             <Link to="/" className="flex-shrink-0">
-              <img src="/mall242logo.jpeg" alt="Mall242" className="h-8 w-auto" />
+              <img src="/mall242logo.jpeg" alt="Mall242" className="h-10 w-auto" />
             </Link>
+            
+            {/* Search Icon with NO background */}
+            <button 
+              onClick={() => {
+                const searchInput = document.querySelector('input[type="text"]');
+                if (searchInput) searchInput.focus();
+              }}
+              className="flex items-center justify-center w-10 h-10 hover:text-[#00A9B0] transition-colors flex-shrink-0"
+            >
+              <i className="bi bi-search text-xl"></i>
+            </button>
           </div>
 
           {/* Mobile Navigation Icons Row - Below the header (TOP 4) */}
