@@ -8,6 +8,7 @@ import SearchAutocomplete from '../common/SearchAutocomplete';
 const Header = () => {
   const navigate = useNavigate();
   const { cartCount } = useCart();
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
@@ -16,13 +17,12 @@ const Header = () => {
   const [user, setUser] = useState(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  // Load user from localStorage - using lazy initialization pattern
+  // Load user from localStorage
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
         const parsedUser = JSON.parse(userStr);
-        // Use a timeout to avoid the setState warning in React 19
         setTimeout(() => setUser(parsedUser), 0);
       } catch (e) {
         console.error('Failed to parse user:', e);
@@ -35,6 +35,14 @@ const Header = () => {
     localStorage.removeItem('user');
     setUser(null);
     navigate('/login');
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : '';
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}${categoryParam}`);
+    }
   };
 
   const handleCategorySelect = (categorySlug) => {
@@ -245,48 +253,69 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Mobile Layout */}
-          <div className="lg:hidden flex items-center justify-between gap-2 py-2">
-            {/* Menu Button - LEFT */}
-            <button 
-              onClick={() => setIsSidebarOpen(true)} 
-              className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-            >
-              <i className="bi bi-list text-2xl"></i>
-            </button>
-            
-            {/* Logo - CENTERED */}
-            <Link to="/" className="flex-shrink-0">
-              <img src="/mall242logo.jpeg" alt="Mall242" className="h-10 w-auto" />
-            </Link>
-            
-            {/* Search Icon with NO background */}
-            <button 
-              onClick={() => {
-                const searchInput = document.querySelector('input[type="text"]');
-                if (searchInput) searchInput.focus();
-              }}
-              className="flex items-center justify-center w-10 h-10 hover:text-[#00A9B0] transition-colors flex-shrink-0"
-            >
-              <i className="bi bi-search text-xl"></i>
-            </button>
+          {/* Mobile Layout - Increased header size, functional oval search */}
+          <div className="lg:hidden">
+            {/* Top row with menu and cart */}
+            <div className="flex items-center justify-between py-3">
+              {/* Menu Button - LEFT */}
+              <button 
+                onClick={() => setIsSidebarOpen(true)} 
+                className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <i className="bi bi-list text-2xl"></i>
+              </button>
+              
+              {/* Logo - CENTER */}
+              <Link to="/" className="flex-shrink-0">
+                <img src="/mall242logo.jpeg" alt="Mall242" className="h-10 w-auto" />
+              </Link>
+              
+              {/* Cart Icon - RIGHT */}
+              <Link to="/cart" className="relative flex items-center justify-center w-10 h-10 hover:text-[#00A9B0] transition-colors">
+                <i className="bi bi-cart text-xl"></i>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#FFC72C] text-black text-[10px] font-bold rounded-full px-1.5 min-w-[16px] text-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
+
+            {/* Search Bar - OVAL SHAPE with search icon inside (no orange background) */}
+            <form onSubmit={handleSearch} className="py-2 pb-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full px-5 py-3 pl-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#00A9B0] focus:border-transparent text-base"
+                />
+                <button 
+                  type="submit"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00A9B0] transition-colors"
+                >
+                  <i className="bi bi-search text-lg"></i>
+                </button>
+              </div>
+            </form>
           </div>
 
           {/* Mobile Navigation Icons Row - Below the header (TOP 4) */}
-          <div className="lg:hidden flex justify-around items-center py-2 border-t border-gray-100 mt-1">
-            <Link to="/" className="flex flex-col items-center text-xs text-gray-600 hover:text-[#00A9B0]">
+          <div className="lg:hidden flex justify-around items-center py-2 border-t border-gray-100">
+            <Link to="/" className="flex flex-col items-center gap-0.5 text-xs text-gray-600 hover:text-[#00A9B0]">
               <i className="bi bi-house-door text-base"></i>
               <span className="text-[10px]">Home</span>
             </Link>
-            <Link to="/products" className="flex flex-col items-center text-xs text-gray-600 hover:text-[#00A9B0]">
+            <Link to="/products" className="flex flex-col items-center gap-0.5 text-xs text-gray-600 hover:text-[#00A9B0]">
               <i className="bi bi-grid text-base"></i>
               <span className="text-[10px]">Shop</span>
             </Link>
-            <Link to="/referral" className="flex flex-col items-center text-xs text-gray-600 hover:text-[#00A9B0]">
+            <Link to="/referral" className="flex flex-col items-center gap-0.5 text-xs text-gray-600 hover:text-[#00A9B0]">
               <i className="bi bi-gem text-base"></i>
               <span className="text-[10px]">VIP</span>
             </Link>
-            <button onClick={() => setIsAiChatOpen(true)} className="flex flex-col items-center text-xs text-gray-600 hover:text-[#00A9B0]">
+            <button onClick={() => setIsAiChatOpen(true)} className="flex flex-col items-center gap-0.5 text-xs text-gray-600 hover:text-[#00A9B0]">
               <i className="bi bi-robot text-base"></i>
               <span className="text-[10px]">AI</span>
             </button>
