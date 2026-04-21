@@ -8,8 +8,9 @@ import MobileBottomNav from '../components/layout/MobileBottomNav';
 const isAdmin = () => {
   const token = localStorage.getItem('temp_auth');
   const userStr = localStorage.getItem('user');
+  const isLoggedIn = localStorage.getItem('isLoggedIn');
   
-  if (!token) return false;
+  if (!token && !isLoggedIn) return false;
   
   if (userStr) {
     try {
@@ -23,7 +24,11 @@ const isAdmin = () => {
 };
 
 const AdminLayout = () => {
-  if (!isAdmin()) {
+  const admin = isAdmin();
+  
+  console.log('AdminLayout - isAdmin:', admin);
+  
+  if (!admin) {
     return <Navigate to="/login" replace />;
   }
 

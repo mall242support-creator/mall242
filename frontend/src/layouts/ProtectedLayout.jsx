@@ -4,28 +4,40 @@ import Footer from '../components/layout/Footer';
 import PromoBar from '../components/layout/PromoBar';
 import MobileBottomNav from '../components/layout/MobileBottomNav';
 
+// Check if user is authenticated
 const isAuthenticated = () => {
   const token = localStorage.getItem('temp_auth');
   const user = localStorage.getItem('user');
-  const rememberMe = localStorage.getItem('rememberMe');
-  const loginExpiry = localStorage.getItem('loginExpiry');
+  const isLoggedIn = localStorage.getItem('isLoggedIn');
   
-  if (rememberMe && loginExpiry) {
-    if (Date.now() > parseInt(loginExpiry)) {
-      localStorage.removeItem('temp_auth');
-      localStorage.removeItem('user');
-      localStorage.removeItem('rememberMe');
-      localStorage.removeItem('loginExpiry');
-      return false;
+  // Check if any auth flag exists
+  return !!(token || isLoggedIn) && !!user;
+};
+
+// Get user role
+const getUserRole = () => {
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      return user.role || 'user';
+    } catch (e) {
+      return 'user';
     }
   }
-  
-  return !!token && !!user;
+  return 'user';
 };
 
 const ProtectedLayout = () => {
-  if (!isAuthenticated()) {
+  const authenticated = isAuthenticated();
+  const userRole = getUserRole();
+  
+  console.log('ProtectedLayout - authenticated:', authenticated);
+  console.log('ProtectedLayout - userRole:', userRole);
+  
+  if (!authenticated) {
     const currentPath = window.location.pathname;
+    console.log('Not authenticated, redirecting to login from:', currentPath);
     return <Navigate to="/login" state={{ from: currentPath }} replace />;
   }
 
