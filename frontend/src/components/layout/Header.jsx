@@ -253,53 +253,53 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Mobile Layout - Increased header size, functional oval search */}
-          <div className="lg:hidden">
-            {/* Top row with menu and cart */}
-            <div className="flex items-center justify-between py-3">
-              {/* Menu Button - LEFT */}
-              <button 
-                onClick={() => setIsSidebarOpen(true)} 
-                className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <i className="bi bi-list text-2xl"></i>
-              </button>
-              
-              {/* Logo - CENTER - INCREASED SIZE */}
-              <Link to="/" className="flex-shrink-0">
-                <img src="/mall242logo.jpeg" alt="Mall242" className="h-14 w-auto" />
-              </Link>
-              
-              {/* Cart Icon - RIGHT */}
-              <Link to="/cart" className="relative flex items-center justify-center w-10 h-10 hover:text-[#00A9B0] transition-colors">
-                <i className="bi bi-cart text-xl"></i>
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#FFC72C] text-black text-[10px] font-bold rounded-full px-1.5 min-w-[16px] text-center">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-            </div>
+{/* Mobile Layout - Increased header size, functional oval search */}
+<div className="lg:hidden">
+  {/* Top row with menu and cart */}
+  <div className="flex items-center justify-between py-2">
+    {/* Menu Button - LEFT */}
+    <button 
+      onClick={() => setIsSidebarOpen(true)} 
+      className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors"
+    >
+      <i className="bi bi-list text-2xl"></i>
+    </button>
+    
+    {/* Logo - CENTER - INCREASED SIZE */}
+    <Link to="/" className="flex-shrink-0">
+      <img src="/mall242logo.jpeg" alt="Mall242" className="h-12 w-auto" />
+    </Link>
+    
+    {/* Cart Icon - RIGHT */}
+    <Link to="/cart" className="relative flex items-center justify-center w-10 h-10 hover:text-[#00A9B0] transition-colors">
+      <i className="bi bi-cart text-xl"></i>
+      {cartCount > 0 && (
+        <span className="absolute -top-1 -right-1 bg-[#FFC72C] text-black text-[10px] font-bold rounded-full px-1.5 min-w-[16px] text-center">
+          {cartCount}
+        </span>
+      )}
+    </Link>
+  </div>
 
-            {/* Search Bar - OVAL SHAPE with search icon inside (no orange background) */}
-            <form onSubmit={handleSearch} className="py-2 pb-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className="w-full px-5 py-3 pl-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#00A9B0] focus:border-transparent text-base"
-                />
-                <button 
-                  type="submit"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00A9B0] transition-colors"
-                >
-                  <i className="bi bi-search text-lg"></i>
-                </button>
-              </div>
-            </form>
-          </div>
+  {/* Search Bar - OVAL SHAPE with search icon inside - REDUCED SPACE */}
+  <form onSubmit={handleSearch} className="pb-2">
+    <div className="relative">
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search products..."
+        className="w-full px-5 py-3 pl-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#00A9B0] focus:border-transparent text-base"
+      />
+      <button 
+        type="submit"
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00A9B0] transition-colors"
+      >
+        <i className="bi bi-search text-lg"></i>
+      </button>
+    </div>
+  </form>
+</div>
 
           {/* Mobile Navigation Icons Row - Below the header (TOP 4) */}
           <div className="lg:hidden flex justify-around items-center py-2 border-t border-gray-100">
