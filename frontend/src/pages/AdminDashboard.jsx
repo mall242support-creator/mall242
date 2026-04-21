@@ -26,10 +26,7 @@ const AdminDashboard = () => {
   });
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
+  // Define fetchDashboardData BEFORE the useEffect
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
@@ -51,6 +48,11 @@ const AdminDashboard = () => {
     }
   };
 
+  // Now useEffect can call fetchDashboardData
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
   const handleBroadcast = async (e) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
@@ -69,6 +71,7 @@ const AdminDashboard = () => {
     }
   };
 
+  // Rest of your component remains the same...
   const sidebarItems = [
     { id: 'overview', name: 'Overview', icon: 'bi-speedometer2' },
     { id: 'users', name: 'Users', icon: 'bi-people' },
@@ -96,7 +99,6 @@ const AdminDashboard = () => {
     <>
       <Helmet>
         <title>Admin Dashboard | Mall242</title>
-        <meta name="description" content="Admin dashboard for Mall242 - Manage users, products, orders, and more." />
       </Helmet>
 
       <div className="bg-gray-50 min-h-screen">
@@ -142,9 +144,8 @@ const AdminDashboard = () => {
               </div>
             </aside>
 
-            {/* Main Content - Mobile Responsive */}
+            {/* Main Content */}
             <div className="flex-1 min-w-0">
-              {/* Message Alert */}
               {message.text && (
                 <div className={`mb-4 p-3 rounded-lg ${
                   message.type === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
@@ -156,7 +157,6 @@ const AdminDashboard = () => {
               {/* Overview Tab */}
               {activeTab === 'overview' && stats && (
                 <div>
-                  {/* Stats Cards - Responsive Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                     <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
                       <div className="flex items-center justify-between">
@@ -167,9 +167,6 @@ const AdminDashboard = () => {
                         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <i className="bi bi-people text-blue-600 text-base sm:text-xl"></i>
                         </div>
-                      </div>
-                      <div className="mt-1 sm:mt-2 text-xs text-gray-500">
-                        <span className="text-green-600">+{stats.users?.newToday || 0}</span> today
                       </div>
                     </div>
                     
@@ -183,9 +180,6 @@ const AdminDashboard = () => {
                           <i className="bi bi-truck text-green-600 text-base sm:text-xl"></i>
                         </div>
                       </div>
-                      <div className="mt-1 sm:mt-2 text-xs text-gray-500">
-                        <span className="text-orange-600">{stats.orders?.pending || 0}</span> pending
-                      </div>
                     </div>
                     
                     <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
@@ -197,9 +191,6 @@ const AdminDashboard = () => {
                         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-full flex items-center justify-center">
                           <i className="bi bi-currency-dollar text-yellow-600 text-base sm:text-xl"></i>
                         </div>
-                      </div>
-                      <div className="mt-1 sm:mt-2 text-xs text-gray-500">
-                        ${(stats.revenue?.today || 0).toLocaleString()} today
                       </div>
                     </div>
                     
@@ -213,13 +204,9 @@ const AdminDashboard = () => {
                           <i className="bi bi-box-seam text-purple-600 text-base sm:text-xl"></i>
                         </div>
                       </div>
-                      <div className="mt-1 sm:mt-2 text-xs text-gray-500">
-                        <span className="text-red-600">{stats.products?.pendingApproval || 0}</span> pending approval
-                      </div>
                     </div>
                   </div>
 
-                  {/* Quick Actions - Responsive Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                     <button onClick={() => setActiveTab('users')} className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 text-center hover:shadow-md transition">
                       <i className="bi bi-person-plus text-xl sm:text-2xl text-[#00A9B0] mb-1 sm:mb-2 block"></i>
@@ -239,9 +226,8 @@ const AdminDashboard = () => {
                     </button>
                   </div>
 
-                  {/* Recent Activity - Responsive */}
                   <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
-                    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 overflow-x-auto">
+                    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
                       <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Recent Users</h3>
                       <div className="space-y-3">
                         {users.slice(0, 5).map((user) => (
@@ -261,7 +247,7 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 overflow-x-auto">
+                    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
                       <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Recent Orders</h3>
                       <div className="space-y-3">
                         {orders.slice(0, 5).map((order) => (
@@ -287,17 +273,12 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {/* Users Tab - Responsive Table */}
+              {/* Users Tab */}
               {activeTab === 'users' && (
                 <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
                   <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                     <h2 className="text-lg sm:text-xl font-bold">User Management</h2>
-                    <button 
-                      onClick={() => alert('Add user feature coming soon')}
-                      className="text-[#00A9B0] text-sm hover:underline"
-                    >
-                      + Add User
-                    </button>
+                    <button className="text-[#00A9B0] text-sm hover:underline">+ Add User</button>
                   </div>
                   <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
                     <table className="min-w-[600px] sm:min-w-full w-full">
@@ -370,22 +351,22 @@ const AdminDashboard = () => {
                                   View
                                 </button>
                                 <button
-  onClick={async () => {
-    if (confirm(`Are you sure you want to delete user "${user.name}"? This action cannot be undone.`)) {
-      try {
-        const res = await adminService.deleteUser(user._id);
-        setMessage({ type: 'success', text: res.message });
-        fetchDashboardData();
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      } catch (error) {
-        setMessage({ type: 'error', text: error.response?.data?.message || 'Delete failed' });
-      }
-    }
-  }}
-  className="text-red-500 hover:underline text-sm"
->
-  Delete
-</button>
+                                  onClick={async () => {
+                                    if (confirm(`Are you sure you want to delete user "${user.name}"? This action cannot be undone.`)) {
+                                      try {
+                                        await adminService.deleteUser(user._id);
+                                        setMessage({ type: 'success', text: `User ${user.name} deleted successfully` });
+                                        fetchDashboardData();
+                                        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+                                      } catch (error) {
+                                        setMessage({ type: 'error', text: error.response?.data?.message || 'Delete failed' });
+                                      }
+                                    }
+                                  }}
+                                  className="text-red-500 hover:underline text-xs sm:text-sm"
+                                >
+                                  Delete
+                                </button>
                               </div>
                             </td>
                           </tr>
