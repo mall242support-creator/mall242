@@ -110,7 +110,7 @@ const Header = () => {
             </button>
 
             <Link to="/" className="flex-shrink-0 mr-4">
-              <img src="/mall242logo.jpeg" alt="Mall242" className="h-14 md:h-16 w-auto object-contain" />
+              <img src="/mall242logo.jpeg" alt="Mall242" className="h-16 md:h-20 w-auto object-contain" />
             </Link>
 
             {/* Search Autocomplete */}
@@ -265,9 +265,9 @@ const Header = () => {
                 <i className="bi bi-list text-2xl"></i>
               </button>
               
-              {/* Logo - CENTER */}
+              {/* Logo - CENTER - INCREASED SIZE */}
               <Link to="/" className="flex-shrink-0">
-                <img src="/mall242logo.jpeg" alt="Mall242" className="h-10 w-auto" />
+                <img src="/mall242logo.jpeg" alt="Mall242" className="h-12 w-auto" />
               </Link>
               
               {/* Cart Icon - RIGHT */}
