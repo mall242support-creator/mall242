@@ -8,7 +8,7 @@ import SearchAutocomplete from '../common/SearchAutocomplete';
 const Header = () => {
   const navigate = useNavigate();
   const { cartCount } = useCart();
-  const [searchQuery, setSearchQuery] = useState('');  // ADD THIS LINE
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
@@ -297,7 +297,7 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Mobile Navigation Icons Row - Below the header */}
+          {/* Mobile Navigation Icons Row - Below the header (TOP 4) */}
           <div className="lg:hidden flex justify-around items-center py-2 border-t border-gray-100 mt-1">
             <Link to="/" className="flex flex-col items-center text-xs text-gray-600 hover:text-[#00A9B0]">
               <i className="bi bi-house-door text-base"></i>
@@ -306,14 +306,6 @@ const Header = () => {
             <Link to="/products" className="flex flex-col items-center text-xs text-gray-600 hover:text-[#00A9B0]">
               <i className="bi bi-grid text-base"></i>
               <span className="text-[10px]">Shop</span>
-            </Link>
-            <Link to="/mystery-drop" className="flex flex-col items-center text-xs text-gray-600 hover:text-[#FFC72C]">
-              <i className="bi bi-question-circle text-base"></i>
-              <span className="text-[10px]">Mystery</span>
-            </Link>
-            <Link to="/dream-mall" className="flex flex-col items-center text-xs text-gray-600 hover:text-[#00A9B0]">
-              <i className="bi bi-building text-base"></i>
-              <span className="text-[10px]">Build</span>
             </Link>
             <Link to="/referral" className="flex flex-col items-center text-xs text-gray-600 hover:text-[#00A9B0]">
               <i className="bi bi-gem text-base"></i>

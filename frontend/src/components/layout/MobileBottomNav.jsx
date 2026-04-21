@@ -46,16 +46,10 @@ const MobileBottomNav = () => {
           <span className="text-[10px]">Mystery</span>
         </Link>
 
-        {/* Dream Mall */}
+        {/* Dream Mall - Build */}
         <Link to="/dream-mall" className="flex flex-col items-center gap-0.5 text-gray-600 hover:text-[#00A9B0] transition-colors">
           <i className="bi bi-building text-xl"></i>
           <span className="text-[10px]">Build</span>
-        </Link>
-
-        {/* VIP Rewards */}
-        <Link to="/referral" className="flex flex-col items-center gap-0.5 text-gray-600 hover:text-[#00A9B0] transition-colors">
-          <i className="bi bi-gem text-xl"></i>
-          <span className="text-[10px]">VIP</span>
         </Link>
 
         {/* Account with Dropdown Menu */}
