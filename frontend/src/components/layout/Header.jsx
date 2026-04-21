@@ -267,7 +267,7 @@ const Header = () => {
               
               {/* Logo - CENTER - INCREASED SIZE */}
               <Link to="/" className="flex-shrink-0">
-                <img src="/mall242logo.jpeg" alt="Mall242" className="h-12 w-auto" />
+                <img src="/mall242logo.jpeg" alt="Mall242" className="h-14 w-auto" />
               </Link>
               
               {/* Cart Icon - RIGHT */}
